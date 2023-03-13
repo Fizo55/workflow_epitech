@@ -1,0 +1,12 @@
+name: What Time is it?
+
+on:
+  push:
+  
+jobs:
+  check-time:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Current date
+      run: date
+  
