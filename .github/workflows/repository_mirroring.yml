@@ -12,6 +12,6 @@ jobs:
     - name: Mirror Repository
       uses: pixta-dev/repository-mirroring-action@v1
       with:
-        entryPoint: "Fizo55/workflow_epitech"
-        target_repo_url: "EpitechPromo2027/B-DOP-200-NAN-2-1-bschocolatine-erwann.tanguy"
+        target_repo_url: "git@github.com:EpitechPromo2027/B-DOP-200-NAN-2-1-bschocolatine-erwann.tanguy.git"
         ssh_private_key: ${{ secrets.EPITECH_TOKEN }}
+        ssh_username: "git"
