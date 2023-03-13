@@ -1,0 +1,16 @@
+name: Repository Size
+
+on:
+  push:
+  
+jobs:
+  check-size:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Branch name
+      run: echo "Current branch is $GITHUB_REF"
+    - name: Check repository size
+      run: du -skh --exclude=".git"
+  
