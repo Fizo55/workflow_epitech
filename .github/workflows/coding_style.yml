@@ -11,27 +11,5 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Check Coding Style
-        run: check.sh . .
+        run: check.sh echo "$PWD $PWD"
       - name: Display Errors
-        if: failure()
-        uses: actions/github-script@v3
-        with:
-          script: |
-            const errors = require('fs').readFileSync('${{ github.workspace }}/errors.txt', 'utf8');
-            const errorArray = errors.split(/\r?\n/);
-            errorArray.forEach((error) => {
-              const [filename, line, column, message] = error.split(':');
-              const annotation = {
-                file: filename,
-                start_line: parseInt(line),
-                end_line: parseInt(line),
-                start_column: parseInt(column),
-                end_column: parseInt(column),
-                annotation_level: 'failure',
-                message: message.trim()
-              };
-              console.log(`::error ${JSON.stringify(annotation)}`);
-            });
-      - name: Fail Job
-        if: failure()
-        run: exit 1
