@@ -11,4 +11,5 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Check Coding Style
-        run: check.sh echo "$PWD $PWD"
+        working-directory: ${{ github.workspace }}
+        run: check.sh . .
