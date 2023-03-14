@@ -19,8 +19,11 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
-      - name: Install jq
-        run: sudo apt update && sudo apt install -y jq
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v1.0.1
+        with:
+          version: '${{ inputs.version }}'
+          force: '${{ inputs.force }}'
       - name: Parse and set error outputs
         if: always()
         id: parse-errors
