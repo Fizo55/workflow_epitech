@@ -1,5 +1,4 @@
-name: Coding style
-
+name: Check coding style
 on: push
 
 jobs:
@@ -8,17 +7,10 @@ jobs:
     container:
       image: ghcr.io/epitech/coding-style-checker:latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v2
-      - name: Check Coding Style
-        working-directory: ${{ github.workspace }}
-        run: check.sh . .
-      - name: Check Coding Style Errors
-        working-directory: ${{ github.workspace }}
-        run: |
-          if [ -s coding-style-reports.log ]; then
-            echo "Coding style check failed"
-            exit 1
-          else
-            echo "Coding style check passed"
-          fi
+      - name: Check coding style
+        run: check.sh ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE}
+        if: ${{ failure() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
