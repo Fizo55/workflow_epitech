@@ -10,7 +10,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Check coding style
-        run: check.sh ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE}
+        run: |
+          check.sh ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE} | tee coding-style-reports.log
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "Failed with exit code $exit_code"
+            exit $exit_code
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
+      - name: Parse and display errors
+        if: always()
+        run: |
+          while IFS=: read -r file line_number severity code message; do
+            filename=$(basename "$file")
+            curl -X POST \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/check-runs/${GITHUB_RUN_ID}/annotations" \
+              -d "{\"path\":\"${file}\",\"start_line\":${line_number},\"end_line\":${line_number},\"annotation_level\":\"failure\",\"message\":\"[${code}] ${message}\"}"
+          done < coding-style-reports.log
       - name: Check report
         if: always()
         run: |
