@@ -20,7 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
       - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+        run: sudo apt update && sudo apt install -y jq
       - name: Parse and set error outputs
         if: always()
         id: parse-errors
