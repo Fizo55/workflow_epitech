@@ -16,7 +16,7 @@ jobs:
       - name: Check Coding Style Errors
         working-directory: ${{ github.workspace }}
         run: |
-          if [ -s coding-style-error.log ]; then
+          if [ -s coding-style-reports.log ]; then
             echo "Coding style check failed"
             exit 1
           else
