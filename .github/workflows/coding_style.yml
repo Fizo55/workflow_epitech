@@ -13,3 +13,11 @@ jobs:
       - name: Check Coding Style
         working-directory: ${{ github.workspace }}
         run: check.sh . .
+      - name: Check Coding Style Errors
+        run: |
+          if [ -s coding-style-error.log ]; then
+            echo "Coding style check failed"
+            exit 1
+          else
+            echo "Coding style check passed"
+          fi
