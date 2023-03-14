@@ -33,31 +33,19 @@ jobs:
           echo "::set-output name=errors::[$errors]"
       - name: Create error annotations
         if: always()
-        uses: actions/github-script@v4
-        with:
-          script: |
-            const errors = JSON.parse('${{ steps.parse-errors.outputs.errors }}');
-            errors.forEach((error) => {
-              const { path, start_line, end_line, annotation_level, message } = error;
-              github.checks.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                check_run_id: context.runId,
-                output: {
-                  title: "Coding style error",
-                  summary: `There's a coding style error in ${path} at line ${start_line}: ${message}`,
-                  annotations: [
-                    {
-                      path: path,
-                      start_line: start_line,
-                      end_line: end_line,
-                      annotation_level: annotation_level,
-                      message: message
-                    }
-                  ]
-                }
-              })
-            })
+        run: |
+          if [ -s "${GITHUB_WORKSPACE}/coding-style-reports.log" ]; then
+            echo "Coding style errors detected"
+            while IFS=: read -r file line_number severity code message; do
+              filename=$(basename "$file")
+              payload=$(echo '{}' | jq --arg path "$file" --arg line_number "$line_number" --arg severity "$severity" --arg code "$code" --arg message "$message" '.path=$path | .start_line=($line_number|tonumber) | .end_line=($line_number|tonumber) | .annotation_level=$severity | .message="["+$code+"] "+$message')
+              echo "$payload" | jq '. |= {"path": .path, "start_line": .start_line, "end_line": .end_line, "annotation_level": .annotation_level, "message": .message}'
+              curl -s -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/check-runs/${GITHUB_RUN_ID}/annotations" -d "$payload"
+            done < coding-style-reports.log
+            exit 1
+          else
+            echo "No coding style errors detected"
+          fi
       - name: Check report
         if: always()
         run: |
