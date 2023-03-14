@@ -35,12 +35,16 @@ jobs:
         run: |
           if [ -s "${GITHUB_WORKSPACE}/coding-style-reports.log" ]; then
             echo "Coding style errors detected"
+            errors=""
             while IFS=: read -r file line_number severity code message; do
               filename=$(basename "$file")
-              payload="{\"path\":\"$file\",\"start_line\":$line_number,\"end_line\":$line_number,\"annotation_level\":\"$severity\",\"message\":\"[$code] $message\"}"
-              echo "$payload"
-              curl -s -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/check-runs/${GITHUB_RUN_ID}/annotations" -d "$payload"
+              errors="${errors}{\"path\":\"${file}\",\"start_line\":${line_number},\"end_line\":${line_number},\"annotation_level\":\"failure\",\"message\":\"[${code}] ${message}\"},"
             done < coding-style-reports.log
+            errors="${errors%?}"
+            payload="{\"name\":\"Coding style check\",\"head_sha\":\"${GITHUB_SHA}\",\"status\":\"completed\",\"conclusion\":\"failure\",\"output\":{\"title\":\"Coding style check\",\"summary\":\"Coding style errors detected.\",\"annotations\":[$errors]}}"
+            echo "$payload" > payload.json
+            response=$(curl -s -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/check-runs" -d "@payload.json")
+            echo "$response"
             exit 1
           else
             echo "No coding style errors detected"
