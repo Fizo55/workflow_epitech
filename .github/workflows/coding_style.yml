@@ -19,11 +19,6 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
-      - name: 'Setup jq'
-        uses: dcarbone/install-jq-action@v1.0.1
-        with:
-          version: '${{ inputs.version }}'
-          force: '${{ inputs.force }}'
       - name: Parse and set error outputs
         if: always()
         id: parse-errors
@@ -42,8 +37,8 @@ jobs:
             echo "Coding style errors detected"
             while IFS=: read -r file line_number severity code message; do
               filename=$(basename "$file")
-              payload=$(echo '{}' | jq --arg path "$file" --arg line_number "$line_number" --arg severity "$severity" --arg code "$code" --arg message "$message" '.path=$path | .start_line=($line_number|tonumber) | .end_line=($line_number|tonumber) | .annotation_level=$severity | .message="["+$code+"] "+$message')
-              echo "$payload" | jq '. |= {"path": .path, "start_line": .start_line, "end_line": .end_line, "annotation_level": .annotation_level, "message": .message}'
+              payload="{\"path\":\"$file\",\"start_line\":$line_number,\"end_line\":$line_number,\"annotation_level\":\"$severity\",\"message\":\"[$code] $message\"}"
+              echo "$payload"
               curl -s -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/check-runs/${GITHUB_RUN_ID}/annotations" -d "$payload"
             done < coding-style-reports.log
             exit 1
