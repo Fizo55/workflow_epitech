@@ -11,6 +11,12 @@ jobs:
         uses: actions/checkout@v2
       - name: Check coding style
         run: check.sh ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE}
-        if: ${{ failure() }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
+      - name: Check report
+        if: always()
+        run: |
+          if [ -s "${GITHUB_WORKSPACE}/coding-style-reports.log" ]; then
+            echo "Coding style errors detected"
+            exit 1
+          else
+            echo "No coding style errors detected"
+          fi
