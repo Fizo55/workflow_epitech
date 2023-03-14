@@ -19,6 +19,8 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
       - name: Parse and set error outputs
         if: always()
         id: parse-errors
@@ -28,7 +30,6 @@ jobs:
             filename=$(basename "$file")
             errors="${errors}{\"path\":\"${file}\",\"start_line\":${line_number},\"end_line\":${line_number},\"annotation_level\":\"failure\",\"message\":\"[${code}] ${message}\"},"
           done < coding-style-reports.log
-          # Remove trailing comma and set outputs
           errors="${errors%?}"
           echo "::set-output name=errors::[$errors]"
       - name: Create error annotations
