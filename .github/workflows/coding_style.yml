@@ -19,17 +19,45 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.EPITECH_TOKEN }}
-      - name: Parse and display errors
+      - name: Parse and set error outputs
         if: always()
+        id: parse-errors
         run: |
+          errors=""
           while IFS=: read -r file line_number severity code message; do
             filename=$(basename "$file")
-            curl -X POST \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/check-runs/${GITHUB_RUN_ID}/annotations" \
-              -d "{\"path\":\"${file}\",\"start_line\":${line_number},\"end_line\":${line_number},\"annotation_level\":\"failure\",\"message\":\"[${code}] ${message}\"}"
+            errors="${errors}{\"path\":\"${file}\",\"start_line\":${line_number},\"end_line\":${line_number},\"annotation_level\":\"failure\",\"message\":\"[${code}] ${message}\"},"
           done < coding-style-reports.log
+          # Remove trailing comma and set outputs
+          errors="${errors%?}"
+          echo "::set-output name=errors::[$errors]"
+      - name: Create error annotations
+        if: always()
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const errors = JSON.parse('${{ steps.parse-errors.outputs.errors }}');
+            errors.forEach((error) => {
+              const { path, start_line, end_line, annotation_level, message } = error;
+              github.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                check_run_id: context.runId,
+                output: {
+                  title: "Coding style error",
+                  summary: `There's a coding style error in ${path} at line ${start_line}: ${message}`,
+                  annotations: [
+                    {
+                      path: path,
+                      start_line: start_line,
+                      end_line: end_line,
+                      annotation_level: annotation_level,
+                      message: message
+                    }
+                  ]
+                }
+              })
+            })
       - name: Check report
         if: always()
         run: |
